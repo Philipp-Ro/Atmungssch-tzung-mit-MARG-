@@ -1,0 +1,89 @@
+addpath('Ergebniss_structs');
+%load('CC_f');
+ % load('RR');
+
+lagen = {'supine','latral','prone'};
+allouts={'Madgwick_PCA','Kalman_PCA','PCA_ACC','PCA_GYRO','PCA_MAG','PCA_ACC_GYRO','PCA_ACC_MAG','PCA_GYRO_MAG','PCA_ALL'};
+aphase={'spontanes_Atmen_1','spontanes_Atmen_2','Atmung_6bpm','Atmung_18bpm','Atmung_36bpm'};
+for n=1:length(lagen)
+    lage=lagen{n};
+
+    for p=1:length(allouts)
+        filter=allouts{p}; 
+        feld=[(filter),'_','CC'];
+        feld_RR=[(filter),'_','RR'];
+        rows = arrayfun(@(zz) strcmpi(zz.position,lage),CC);
+
+        madgwickCC = abs([CC.(feld)]);
+
+        rowSel = madgwickCC(rows);
+
+        CC_Mean = mean(rowSel);
+        CC_STD = std(rowSel);
+        
+        
+        data=allouts{p}; 
+       
+    for a=1:length(idx)
+        
+        for b = 1:length(RR(idx(a)).(feld_RR))
+               c=c+1;
+            s1=RR(idx(a)).ref_RR(b);
+            s2=RR(idx(a)).(feld_RR)(b);
+
+            RR_Mean(c)=(s1+s2)/2;
+            RR_error(c)=(s1-s2);
+        end
+        RR_STD = std(RR(idx(a)).(feld_RR)(b));
+       % filter=allouts{p}; 
+        data_mean_CC=[(filter),'_','MEAN_CC'];
+        data_std_CC=[(filter),'_','STD_CC'];
+        
+        data_mean_RR=[(filter),'_','MEAN_RR'];
+        data_error_RR=[(filter),'_','ERROR_RR'];
+        data_std_RR=[(filter),'_','STD_RR'];
+        
+        %fprintf(['\n',filter,' ',lage,': %0.2f +- %0.2f\n'],currMean,currSTD)
+        Std_Mean_Lage(n).lage=lage;
+        Std_Mean_Lage(n).(data_mean_CC)= CC_Mean;
+        Std_Mean_Lage(n).(data_std_CC)=CC_STD;
+        Std_Mean_Lage(n).(data_mean_RR)= RR_Mean;
+        Std_Mean_Lage(n).(data_error_RR)= RR_Mean;
+        Std_Mean_Lage(n).(data_std_RR)= RR_STD;
+    end
+    end
+end
+
+for m=1:length(aphase)
+    phase=aphase{m};
+    for i=1:length(allouts)
+        filter=allouts{i}; 
+        feld=[(filter),'_','CC'];
+        rows2 = arrayfun(@(zz) strcmpi(zz.phase,phase),CC);
+
+        madgwickCC = abs([CC.(feld)]);
+
+        rowSel = madgwickCC(rows2);
+
+        CC_Mean = mean(rowSel);
+        CC_STD = std(rowSel);
+
+        filter=allouts{i}; 
+        data_mean_CC=[(filter),'_','MEAN'];
+        data_std_CC=[(filter),'_','STD'];
+ 
+        %fprintf(['\n',filter,' ',lage,': %0.2f +- %0.2f\n'],currMean,currSTD)
+        Std_Mean_Atemphase(m).phase=phase;
+        Std_Mean_Atemphase(m).(data_mean_CC)= CC_Mean;
+        Std_Mean_Atemphase(m).(data_std_CC)=CC_STD;
+    end
+end
+
+filepath= pwd;
+    filename='\Ergebniss_structs\Std_Mean_Atemphase';
+    fname=[filepath filename];
+    save(fname,'Std_Mean_Atemphase');
+    
+    filename='\Ergebniss_structs\Std_Mean_Lage';
+    fname=[filepath filename];
+    save(fname,'Std_Mean_Lage');
